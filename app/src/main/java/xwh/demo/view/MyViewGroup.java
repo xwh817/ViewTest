@@ -7,17 +7,16 @@ import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 /**
  * Created by xwh on 2018/7/5.
  */
-public class MyViewGroup extends LinearLayout {
+public class MyViewGroup extends ViewGroup {
 
 	private TextView[] mItems;
 	private int mColorResNormal = Color.parseColor("#999999");
-	private int mColorResSelect = Color.parseColor("#cccccc");
+	private int mColorResSelect = Color.GREEN;
 	private int mCurrentIndex = -1;
 	private int mBorderWidth = 6;
 	private int mItemWidth = 200;
@@ -33,7 +32,10 @@ public class MyViewGroup extends LinearLayout {
 
 	public MyViewGroup(Context context, AttributeSet attrs, int defStyleAttr) {
 		super(context, attrs, defStyleAttr);
+		initView();
+	}
 
+	private void initView() {
 
 		OnClickListener onClickListener = new OnClickListener() {
 			@Override
@@ -52,13 +54,7 @@ public class MyViewGroup extends LinearLayout {
 
 			mItems = new TextView[mTitles.length];
 			for (int i = 0; i < mTitles.length; i++) {
-				TextView textView = new TextView(getContext());
-				textView.setText(mTitles[i]);
-
-				textView.setBackgroundColor(mColorResNormal);
-				textView.setTextSize(18);
-				textView.setGravity(Gravity.CENTER);
-
+				TextView textView = getItemView(mTitles[i]);
 				textView.setTag(i);
 				textView.setOnClickListener(onClickListener);
 				mItems[i] = textView;
@@ -69,6 +65,16 @@ public class MyViewGroup extends LinearLayout {
 
 		}
 
+	}
+
+	private TextView getItemView(String title) {
+		TextView textView = new TextView(getContext());
+		textView.setText(title);
+		textView.setTextSize(18);
+		textView.setTextColor(Color.WHITE);
+		textView.setBackgroundColor(mColorResNormal);
+		textView.setGravity(Gravity.CENTER);
+		return textView;
 	}
 
 	public void selectItem(int index) {
@@ -98,52 +104,76 @@ public class MyViewGroup extends LinearLayout {
 	}
 
 
-	private int totalWidth = 0;
-	private int totalHeight = 0;
+	//private int totalWidth = 0;
+	//private int totalHeight = 0;
 
+	/**
+	 * 用来计算自己的宽高
+	 */
 	@Override
 	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 
-		// 测量子View
-		/*if (!isMeasured) {      // 没有动态添加的情况，这儿只测量一次
-			isMeasured = true;
-			measureChildren(widthMeasureSpec, heightMeasureSpec);
+		// 获得此ViewGroup上级容器为其推荐的宽和高，以及计算模式
+		int widthMode = MeasureSpec.getMode(widthMeasureSpec);
+		int heightMode = MeasureSpec.getMode(heightMeasureSpec);
+		int sizeWidth = MeasureSpec.getSize(widthMeasureSpec);
+		int sizeHeight = MeasureSpec.getSize(heightMeasureSpec);
 
-			for (int i = 0; i < mItems.length; i++) {
-				View childView = mItems[i];
+		// 计算出所有的childView的宽和高
+		measureChildren(widthMeasureSpec, heightMeasureSpec);
 
-				totalWidth += childView.getMeasuredWidth();
+		int totalWidth = 0;
+		int totalHeight = 0;
+		// 根据子View计算出ViewGroup的宽高
+		for (int i = 0; i < mItems.length; i++) {
+			View childView = mItems[i];
 
-				int childHeight = childView.getMeasuredHeight();
-				if (childHeight > totalHeight) {
-					totalHeight = childHeight;
-				}
+			totalWidth += childView.getMeasuredWidth();
+
+			int childHeight = childView.getMeasuredHeight();
+			if (childHeight > totalHeight) {    // 取最高的为父容器的高度
+				totalHeight = childHeight;
 			}
 		}
 
-		measureChildren(widthMeasureSpec, heightMeasureSpec);
-*/
-		totalWidth = mItemWidth * getChildCount() - mBorderWidth * (getChildCount() - 1);
-		totalHeight = mItemHeight;
-		//setMeasuredDimension(totalWidth, totalHeight);
 
-		super.onMeasure(totalWidth, totalHeight);
+		int mWidth;
+		int mHeight;
+
+		if (widthMode == MeasureSpec.EXACTLY) { // 当在布局中指定了宽度为match_parent或是固定值时，不用计算了，直接使用指定的值。
+			mWidth = sizeWidth;
+		} else {
+			mWidth = totalWidth + (getChildCount() + 1) * mBorderWidth;
+		}
+
+		if (heightMode == MeasureSpec.EXACTLY) {
+			mHeight = sizeHeight;
+		} else {
+			mHeight = totalHeight + mBorderWidth * 2;
+		}
+
+		// 设置自己的大小
+		setMeasuredDimension(mWidth, mHeight);
 
 	}
 
+	/**
+	 * 指定子View的位置
+	 * 参数是当前View在其父控件中的位置（由父控件指派的）
+	 */
 	@Override
 	protected void onLayout(boolean changed, int l, int t, int r, int b) {
-		int totalLeft = 0;
-		for (int i = 0; i < mItems.length; i++) {   // bringToFront会改变childView的位置，这儿固定初始的位置
+		int childLeft = 0;
+		int childTop = mBorderWidth;
+		for (int i = 0; i < mItems.length; i++) {
 			TextView child = mItems[i];
-			if (i > 0) {
-				totalLeft -= mBorderWidth;
-			}
-			child.layout(totalLeft, 0, totalLeft + mItemWidth, mItemHeight);
-			totalLeft += mItemWidth;
+			childLeft += mBorderWidth;
+			int childWidth = child.getMeasuredWidth();
+			int childRight = childLeft + childWidth;
+			int childBottom = childTop + child.getMeasuredHeight();
+			child.layout(childLeft, childTop, childRight, childBottom); // 指定子View位置
+			childLeft += childWidth;
 		}
-
-		//super.onLayout(changed, l, t, r, b);
 	}
 
 }
