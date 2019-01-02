@@ -18,4 +18,8 @@ public class MainActivity extends Activity {
 		startActivity(new Intent(this, MyViewGroupActivity.class));
 	}
 
+	public void eventTest(View view) {
+		startActivity(new Intent(this, EventActivity.class));
+	}
+
 }

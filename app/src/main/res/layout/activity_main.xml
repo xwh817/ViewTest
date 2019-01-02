@@ -4,7 +4,8 @@
 	xmlns:tools="http://schemas.android.com/tools"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
-	tools:context="xwh.demo.view.MainActivity">
+	tools:context="xwh.demo.view.MainActivity"
+	android:orientation="vertical">
 
 	<!--<TextView
 		android:layout_width="wrap_content"
@@ -25,5 +26,11 @@
 		android:layout_height="wrap_content"
 		android:text="自定义ViewGroup"
 		android:onClick="myViewGroup"/>
+
+	<Button
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:text="事件分发"
+		android:onClick="eventTest"/>
 
 </LinearLayout>
